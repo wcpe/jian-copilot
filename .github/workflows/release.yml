@@ -30,27 +30,7 @@ jobs:
       - name: Package VSIX
         run: npx @vscode/vsce package -o extension.vsix
 
-      - name: Upload artifact
-        uses: actions/cache/save@v4
-        with:
-          key: vsix-${{ github.run_id }}-${{ github.run_attempt }}
-          path: extension.vsix
-
-  publish:
-    runs-on: ubuntu-latest
-    needs: [package]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - uses: actions/cache/restore@v4
-        with:
-          key: vsix-${{ github.run_id }}-${{ github.run_attempt }}
-          path: .
-          fail-on-cache-miss: true
-
+      # 产物留在同一 job 工作区：同 run 跨 job cache 传递实测不可靠，
+      # 直接在本 job 继续发布（原 package→publish 两 job 合一）。
       - name: Publish to VS Code Marketplace
         run: npx @vscode/vsce publish --allow-proposed-apis chatProvider --pat ${{ secrets.MARKETPLACE_TOKEN }} --packagePath ./extension.vsix
